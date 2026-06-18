@@ -71,3 +71,11 @@ Android is the primary target platform. iOS support is planned.
 ## License
 
 Released under the [Apache-2.0](LICENSE) License.
+
+---
+
+<div align="center">
+
+### The Synk Series
+
+</div>
