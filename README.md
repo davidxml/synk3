@@ -1,73 +1,73 @@
-# React + TypeScript + Vite
+# ⏰ Synk3
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Wake-up synchronization for modern hostels.**
 
-Currently, two official plugins are available:
+Synk3 is a mobile-first alarm system built to replace the traditional practice of knocking or banging on hostel doors to wake students for morning devotion.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+The goal is simple: provide a more reliable, less disruptive, and scalable way to coordinate wake-up schedules across a hostel community. Currently focused on Android, Synk3 is designed for environments where consistency, simplicity, and reliability matter most.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Why Synk3?
 
-## Expanding the ESLint configuration
+Morning wake-up coordination in many hostels still depends on manual door-to-door wake-up rounds. While effective, the process is noisy, time-consuming, and difficult to manage at scale.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Synk3 offers a smarter alternative through synchronized mobile alarms and centralized schedule management.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Tech Stack
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+| Layer | Technology |
+|---|---|
+| Frontend | React, TypeScript, Vite |
+| Mobile Engine | Capacitor, Kotlin / Java |
+| Backend / BaaS | Firebase / Supabase |
+
+---
+
+## Getting Started
+
+Clone the repository and navigate into the project directory:
+
+```bash
+git clone <repo-url>
+cd synk3
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Install the dependencies:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
+
+### Run Locally
+
+To spin up the local development server:
+
+```bash
+npm run dev
+```
+
+### Build for Android
+
+To build the project and open it in Android Studio:
+
+```bash
+npm run build
+npx cap sync android
+npx cap open android
+```
+
+---
+
+## Status
+
+**Active development.**
+Android is the primary target platform. iOS support is planned.
+
+---
+
+## License
+
+Released under the [Apache-2.0](LICENSE) License.
