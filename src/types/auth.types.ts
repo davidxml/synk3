@@ -1,0 +1,69 @@
+/**
+ * Supported authenticated user roles.
+ */
+export type UserRole = "STUDENT" | "COORDINATOR";
+
+/**
+ * Authentication and lease state.
+ */
+export interface AuthState {
+  /**
+   * Current authenticated user's role.
+   */
+  readonly role: UserRole;
+
+  /**
+   * Indicates whether the user is authenticated.
+   */
+  readonly isAuthenticated: boolean;
+
+  /**
+   * Lease expiration timestamp in epoch milliseconds.
+   * Null when no active lease exists.
+   */
+  readonly leaseExpiresAt: number | null;
+
+  /**
+   * Monotonic elapsed-time anchor in milliseconds used for
+   * offline lease validation.
+   * Null when unavailable.
+   */
+  readonly leaseAnchorElapsed: number | null;
+}
+
+/**
+ * Payload used for TOTP validation.
+ */
+export interface TOTPPayload {
+  /**
+   * One-time PIN code entered by the user.
+   */
+  readonly pin: string;
+
+  /**
+   * Timestamp associated with the PIN generation or validation
+   * in epoch milliseconds.
+   */
+  readonly timestamp: number;
+}
+
+/**
+ * Result of lease validation.
+ */
+export interface LeaseValidationResult {
+  /**
+   * Indicates whether the lease is valid.
+   */
+  readonly isValid: boolean;
+
+  /**
+   * Human-readable validation reason.
+   */
+  readonly reason: string;
+
+  /**
+   * Remaining lease duration in milliseconds.
+   * Null when unavailable.
+   */
+  readonly remainingMs: number | null;
+}
