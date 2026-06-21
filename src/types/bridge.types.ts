@@ -79,3 +79,15 @@ export type GetAlarmStatusResult = BridgeResult<{
   readonly status: AlarmStatus;
   readonly scheduledEpoch: number | null;
 }>;
+
+/**
+ * Result returned after scheduling a background sync.
+ */
+export type ScheduleBackgroundSyncResult = BridgeResult<null>;
+
+/**
+ * Result returned when querying the hardware-anchored elapsed realtime.
+ */
+export type GetElapsedRealtimeResult = BridgeResult<{
+  readonly elapsedMs: number;
+}>;
