@@ -9,6 +9,8 @@ import type {
   SetAlarmResult,
   ValidateLeasePayload,
   ValidateLeaseResult,
+  ScheduleBackgroundSyncResult,
+  GetElapsedRealtimeResult,
 } from '../types/bridge.types';
 
 export interface SynkEnginePlugin {
@@ -24,9 +26,9 @@ export interface SynkEnginePlugin {
     payload: ValidateLeasePayload
   ) => Promise<ValidateLeaseResult>;
 
-  readonly scheduleBackgroundSync: () => Promise<
-    BridgeResult<null>
-  >;
+  readonly scheduleBackgroundSync: () => Promise<ScheduleBackgroundSyncResult>;
+
+  readonly getElapsedRealtime: () => Promise<GetElapsedRealtimeResult>;
 }
 
 const WEB_ERROR = 'Native plugin not available on web';
