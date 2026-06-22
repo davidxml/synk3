@@ -72,6 +72,12 @@ class WebSynkEngine extends WebPlugin implements SynkEnginePlugin {
   > {
     return createWebErrorResult<null>();
   }
+
+  async getElapsedRealtime(): Promise<GetElapsedRealtimeResult> {
+    return createWebErrorResult<{
+      readonly elapsedMs: number;
+    }>();
+  }
 }
 
 export const SynkBridge = registerPlugin<SynkEnginePlugin>(
