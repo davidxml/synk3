@@ -31,7 +31,7 @@ Synk3 offers a smarter alternative through synchronized mobile alarms and centra
 Clone the repository and navigate into the project directory:
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/davidxml/synk3
 cd synk3
 ```
 
