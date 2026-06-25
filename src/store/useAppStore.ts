@@ -37,10 +37,13 @@ export const useAppStore = create<AppStoreState>((set) => ({
 
   requestNotificationPermission: async () => {
     try {
-      const granted = await NotificationService.requestPermission();
-      set({ hasNotificationPermission: granted, error: null });
+      const result = await NotificationService.requestPermission();
+      set({ 
+        hasNotificationPermission: result.granted, 
+        error: result.message // Maps your rich error message to state
+      });
     } catch (err) {
-      set({ error: err instanceof Error ? err.message : 'Failed to request notification permission' });
+      set({ error: 'Failed to request notification permission' });
     }
   },
 }));
