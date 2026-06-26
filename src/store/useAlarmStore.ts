@@ -104,17 +104,29 @@ export const useAlarmStore = create<AlarmStoreState>()(
         set({ isLoading: true });
         try {
           const cloudRecord = await CloudSyncService.fetchLatest();
-          const mappedConfig = AlarmService.mapCloudRecordToConfig(cloudRecord, get().config);
-          
-          set({ 
-            config: mappedConfig,
-            syncState: {
-              status: 'SYNCED',
-              lastAttempt: Date.now(),
-              lastSuccess: Date.now(),
-              error: null,
-            }
-          });
+          if (!cloudRecord) {
+            // No data available from cloud — mark offline and preserve existing config
+            set({
+              syncState: {
+                ...get().syncState,
+                status: 'OFFLINE',
+                lastAttempt: Date.now(),
+                error: 'No cloud record available',
+              }
+            });
+          } else {
+            const mappedConfig = AlarmService.mapCloudRecordToConfig(cloudRecord, get().config);
+
+            set({ 
+              config: mappedConfig,
+              syncState: {
+                status: 'SYNCED',
+                lastAttempt: Date.now(),
+                lastSuccess: Date.now(),
+                error: null,
+              }
+            });
+          }
         } catch (err) {
           set({
             syncState: {
