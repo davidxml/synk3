@@ -1,9 +1,11 @@
 import { SynkBridge } from '../bridge/SynkBridge';
 import type { 
-  TOTPPayload, 
-  LeaseValidationResult 
-} from '../types';
-import type { EpochMs } from '../types';
+  TOTPPayload,
+} from '../types/auth.types';
+import type { 
+  EpochMs,
+  TOTPVerificationResult,
+} from '../types/common.types';
 
 /**
  * Hashes a PIN using PBKDF2, HmacSHA256, 100,000 iterations.
@@ -46,36 +48,36 @@ export const hashPin = async (pin: string): Promise<string> => {
  */
 export const verifyTOTP = async (
   payload: Readonly<TOTPPayload>
-): Promise<Readonly<LeaseValidationResult>> => {
-  const result = await SynkBridge.validateLease(payload);
+): Promise<Readonly<TOTPVerificationResult>> => {
+  const result = await SynkBridge.validateLease({
+    pinHash: await hashPin(payload.pin),
+    elapsedAnchor: payload.timestamp
+  });
 
   if (!result.success || !result.data) {
     return {
-      isValid: false,
-      reason: "UNAUTHORIZED",
+      success: false,
+      data: null,
       error: result.error || "Native lease validation failed",
-      data: null
     };
   }
 
-  const remainingMs = result.data.remainingMs as EpochMs;
+  const remainingMs = result.data.remainingMs;
 
   return {
-    isValid: true,
-    reason: "VALID",
-    error: null,
+    success: true,
     data: {
       role: 'COORDINATOR',
-      remainingMs,
-      leaseExpiresAt: computeLeaseExpiry(remainingMs),
+      leaseExpiresAt: computeLeaseExpiry(remainingMs) as EpochMs,
       leaseAnchorElapsed: null // Will be populated by store's refresh mechanism
-    }
+    },
+    error: null,
   };
 };
 
 /**
  * Calculates absolute epoch expiry from relative remaining time.
  */
-export const computeLeaseExpiry = (remainingMs: EpochMs): EpochMs => {
+export const computeLeaseExpiry = (remainingMs: number): EpochMs => {
   return (Date.now() + remainingMs) as EpochMs;
 };
