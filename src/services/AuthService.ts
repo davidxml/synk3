@@ -1,10 +1,10 @@
 import { SynkBridge } from '../bridge/SynkBridge';
 import type { 
   TOTPPayload,
+  LeaseValidationResult,
 } from '../types/auth.types';
 import type { 
   EpochMs,
-  TOTPVerificationResult,
 } from '../types/common.types';
 
 /**
@@ -48,30 +48,16 @@ export const hashPin = async (pin: string): Promise<string> => {
  */
 export const verifyTOTP = async (
   payload: Readonly<TOTPPayload>
-): Promise<Readonly<TOTPVerificationResult>> => {
+): Promise<Readonly<LeaseValidationResult>> => {
   const result = await SynkBridge.validateLease({
     pinHash: await hashPin(payload.pin),
     elapsedAnchor: payload.timestamp
   });
 
-  if (!result.success || !result.data) {
-    return {
-      success: false,
-      data: null,
-      error: result.error || "Native lease validation failed",
-    };
-  }
-
-  const remainingMs = result.data.remainingMs;
-
   return {
-    success: true,
-    data: {
-      role: 'COORDINATOR',
-      leaseExpiresAt: computeLeaseExpiry(remainingMs) as EpochMs,
-      leaseAnchorElapsed: null // Will be populated by store's refresh mechanism
-    },
-    error: null,
+    isValid: result.success,
+    reason: result.error || (result.success ? 'Lease validation succeeded' : 'Native lease validation failed'),
+    remainingMs: result.data?.remainingMs ?? null,
   };
 };
 
