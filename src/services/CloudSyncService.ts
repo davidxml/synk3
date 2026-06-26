@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
-import type { CloudAlarmRecord, SyncStatus } from '../types';
-import type { EpochMs } from '../types';
+import type { CloudAlarmRecord, SyncStatus } from '../types/sync.types';
+import type { EpochMs } from '../types/common.types';
 
 class ConfigurationError extends Error {
   constructor(message: string) {
