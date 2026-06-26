@@ -1,17 +1,29 @@
 import { SynkBridge } from '../bridge/SynkBridge';
 import type { 
   AlarmTime, 
-  AlarmConfig, 
-  SetAlarmResult, 
+  AlarmConfig,
+} from '../types/alarm.types';
+import type { 
   CloudAlarmRecord 
-} from '../types';
+} from '../types/sync.types';
+import type {
+  SetAlarmResult,
+} from '../types/bridge.types';
 import type { 
   Time24String, 
   ISODateString, 
   EpochMs 
-} from '../types';
+} from '../types/common.types';
 
 export const DEFAULT_ALARM_TIME: Readonly<AlarmTime> = { hours: 5, minutes: 30 };
+
+export const DEFAULT_ALARM_CONFIG: Readonly<AlarmConfig> = {
+  defaultTime: DEFAULT_ALARM_TIME,
+  overrideTime: null,
+  activeDate: null,
+  isEnabled: false,
+  lastSyncedAt: null,
+};
 
 /**
  * Validates and formats an AlarmTime object into a zero-padded "HH:MM" string.
