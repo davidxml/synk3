@@ -1,5 +1,5 @@
-import type { AuthState } from '../types';
-import type { EpochMs } from '../types';
+import type { AuthState } from '../types/auth.types';
+import type { EpochMs } from '../types/common.types';
 
 export interface LeaseCheckResult {
   readonly isValid: boolean;
