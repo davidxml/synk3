@@ -1,9 +1,8 @@
-/**
- * Strict typing for time strings (HH:mm) and ISO Dates (YYYY-MM-DD)
- * to prevent native Android parsing exceptions from cloud payloads.
- */
-type TimeString = `${number}:${number}`;
-type ISODateString = `${number}-${number}-${number}`;
+import type {
+  TimeString,
+  ISODateString,
+  EpochMs,
+} from './common.types'
 
 /**
  * Alarm record stored in the cloud synchronization layer.
@@ -49,13 +48,13 @@ export interface SyncState {
    * Most recent synchronization attempt timestamp in epoch milliseconds.
    * Null when no attempt has been made.
    */
-  readonly lastAttempt: number | null;
+  readonly lastAttempt: EpochMs | null;
 
   /**
    * Most recent successful synchronization timestamp in epoch milliseconds.
    * Null when no successful sync has occurred.
    */
-  readonly lastSuccess: number | null;
+  readonly lastSuccess: EpochMs | null;
 
   /**
    * Human-readable synchronization error message.
