@@ -6,7 +6,7 @@ export interface AlarmTime {
    * Hour of day in 24-hour format.
    * Valid range: 0-23.
    */
-  readonly hours: number;
+  readonly hours: TimeString;
 
   /**
    * Minute of hour.
@@ -19,6 +19,13 @@ export interface AlarmTime {
  * Strict typing for ISO 8601 Date (YYYY-MM-DD) to prevent bridge parsing errors.
  */
 type ISODateString = `${number}-${number}-${number}`;
+
+/**
+ * Strict typing for time strings (HH:mm) and ISO Dates (YYYY-MM-DD)
+ * to prevent native Android parsing exceptions.
+ */
+
+type TimeString = `${number}:${number}`;
 
 /**
  * Alarm configuration persisted by the application.
