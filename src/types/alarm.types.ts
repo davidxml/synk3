@@ -1,3 +1,8 @@
+import type {
+  TimeString,
+  ISODateString,
+} from './common.types'
+
 /**
  * Represents a 24-hour clock time.
  */
@@ -16,31 +21,19 @@ export interface AlarmTime {
 }
 
 /**
- * Strict typing for ISO 8601 Date (YYYY-MM-DD) to prevent bridge parsing errors.
- */
-type ISODateString = `${number}-${number}-${number}`;
-
-/**
- * Strict typing for time strings (HH:mm) and ISO Dates (YYYY-MM-DD)
- * to prevent native Android parsing exceptions.
- */
-
-type TimeString = `${number}:${number}`;
-
-/**
  * Alarm configuration persisted by the application.
  */
 export interface AlarmConfig {
   /**
    * Default alarm time used when no override is active.
    */
-  readonly defaultTime: AlarmTime;
+  readonly defaultTime: TimeString;
 
   /**
    * Temporary alarm time override.
    * Null when no override exists.
    */
-  readonly overrideTime: AlarmTime | null;
+  readonly overrideTime: TimeString | null;
 
   /**
    * Active date for the override alarm. 
