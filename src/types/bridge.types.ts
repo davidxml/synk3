@@ -1,11 +1,12 @@
-import type { AlarmStatus } from "./alarm.types";
+import type {
+  TimeString,
+  ISODateString,
+  EpochMs,
+} from './common.types'
 
-/**
- * Strict typing for time strings (HH:mm) and ISO Dates (YYYY-MM-DD)
- * to prevent native Android parsing exceptions.
- */
-type TimeString = `${number}:${number}`;
-type ISODateString = `${number}-${number}-${number}`;
+import type {
+  AlarmStatus
+} from './alarm.types'
 
 /**
  * Generic result wrapper returned by native bridge operations.
@@ -42,7 +43,7 @@ export interface SetAlarmPayload {
  * Result returned after scheduling an alarm.
  */
 export type SetAlarmResult = BridgeResult<{
-  readonly scheduledEpoch: number;
+  readonly scheduledEpoch: EpochMs;
 }>;
 
 /**
@@ -77,7 +78,7 @@ export type CancelAlarmResult = BridgeResult<null>;
  */
 export type GetAlarmStatusResult = BridgeResult<{
   readonly status: AlarmStatus;
-  readonly scheduledEpoch: number | null;
+  readonly scheduledEpoch: EpochMs | null;
 }>;
 
 /**
