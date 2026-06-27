@@ -1,6 +1,7 @@
 import type {
   TimeString,
   ISODateString,
+  EpochMs,
 } from './common.types'
 
 /**
@@ -50,7 +51,7 @@ export interface AlarmConfig {
    * Last successful synchronization timestamp in epoch milliseconds.
    * Null when never synchronized.
    */
-  readonly lastSyncedAt: number | null;
+  readonly lastSyncedAt: EpochMs | null;
 }
 
 /**
