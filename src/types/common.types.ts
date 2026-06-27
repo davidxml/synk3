@@ -10,7 +10,7 @@ export type EpochMs = number & { readonly brand: 'EpochMs' };
  * Strict typing for 24-hour time format (HH:mm).
  * Prevents accidental parsing errors in Android alarm scheduling.
  */
-export type Time24String = `${number}:${number}`;
+export type TimeString = `${number}:${number}`;
 
 /**
  * Strict typing for ISO 8601 Date format (YYYY-MM-DD).
