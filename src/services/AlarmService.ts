@@ -9,13 +9,14 @@ import type {
 import type {
   SetAlarmResult,
 } from '../types/bridge.types';
+
 import type { 
-  Time24String, 
+  TimeString, 
   ISODateString, 
   EpochMs 
 } from '../types/common.types';
 
-export const DEFAULT_ALARM_TIME: Readonly<AlarmTime> = { hours: 5, minutes: 30 };
+export const DEFAULT_ALARM_TIME: Readonly<AlarmTime> = { hourTime24Strings: 5, minutes: 30 };
 
 export const DEFAULT_ALARM_CONFIG: Readonly<AlarmConfig> = {
   defaultTime: DEFAULT_ALARM_TIME,
@@ -28,21 +29,21 @@ export const DEFAULT_ALARM_CONFIG: Readonly<AlarmConfig> = {
 /**
  * Validates and formats an AlarmTime object into a zero-padded "HH:MM" string.
  */
-export const formatAlarmTimeString = (time: Readonly<AlarmTime>): Time24String => {
+export const formatAlarmTimeString = (time: Readonly<AlarmTime>): TimeString => {
   if (time.hours < 0 || time.hours > 23 || time.minutes < 0 || time.minutes > 59) {
     throw new TypeError(`Invalid alarm time bounds: ${time.hours}:${time.minutes}`);
   }
   const h = time.hours.toString().padStart(2, '0');
   const m = time.minutes.toString().padStart(2, '0');
-  return `${h}:${m}` as Time24String;
+  return `${h}:${m}` as TimeString;
 };
 
 /**
  * Parses a "HH:MM" string into a strictly typed AlarmTime object.
  */
-export const parseAlarmTimeString = (raw: Time24String): Readonly<AlarmTime> => {
+export const parseAlarmTimeString = (raw: TimeString): Readonly<AlarmTime> => {
   if (!/^\d{2}:\d{2}$/.test(raw)) {
-    throw new TypeError(`Invalid Time24String format: ${raw}`);
+    throw new TypeError(`Invalid TimeString format: ${raw}`);
   }
   
   const [hStr, mStr] = raw.split(':');
