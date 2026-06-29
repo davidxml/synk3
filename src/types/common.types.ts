@@ -1,27 +1,20 @@
 import type { UserRole } from './auth.types';
 
 /**
- * Brand-new type for epoch millisecond timestamps.
- * Ensures type safety when working with Date.now() and similar time values.
+ * Branded type for epoch millisecond timestamps.
  */
-export type EpochMs = number & { readonly brand: 'EpochMs' };
+export type EpochMs = number & { readonly __brand: 'EpochMs' };
 
 /**
  * Strict typing for 24-hour time format (HH:mm).
- * Prevents accidental parsing errors in Android alarm scheduling.
  */
-export type TimeString = `${number}:${number}`;
+export type TimeString = string & { readonly __brand: 'TimeString' };
 
 /**
  * Strict typing for ISO 8601 Date format (YYYY-MM-DD).
- * Prevents bridge parsing errors from cloud payloads.
  */
-export type ISODateString = `${number}-${number}-${number}`;
+export type ISODateString = string & { readonly __brand: 'ISODateString' };
 
-/**
- * Result of TOTP verification from AuthService.verifyTOTP.
- * Includes authenticated role and lease metadata needed for store hydration.
- */
 export interface TOTPVerificationResult {
   readonly success: boolean;
   readonly data: {
