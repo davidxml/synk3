@@ -1,70 +1,90 @@
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
-import type { 
-  NotificationPermissionResult, 
-  NotificationPermissionError 
-} from '../types/notification.types';
+import { SynkBridge } from '../bridge/SynkBridge';
+import type { NotificationPermissionError } from '../types/notification.types';
 
-const createSuccessResult = (): NotificationPermissionResult => ({
-  granted: true,
-  errorCode: null,
-  message: null,
-});
+export interface AppPermissionStatus {
+  readonly notificationsGranted: boolean;
+  readonly exactAlarmGranted: boolean;
+  readonly errorCode: NotificationPermissionError | 'PERMANENTLY_DENIED' | null;
+}
 
-const createFailureResult = (
-  errorCode: NotificationPermissionError,
-  message: string
-): NotificationPermissionResult => ({
-  granted: false,
-  errorCode,
-  message,
-});
-
+/**
+ * OS Permission Orchestrator.
+ * * Architectural Rules Enforced:
+ * - SV-001: Orchestrates native system checks without mutating Zustand stores.
+ * - BR-001: Delegates Exact Alarm checks purely to the custom SynkBridge.
+ */
 export const NotificationService = {
-  async getPermissionStatus(): Promise<NotificationPermissionResult> {
+  
+  /**
+   * Silently checks OS permissions without triggering user-facing dialogue boxes.
+   * Crucial for the app boot sequence to prevent "State Amnesia".
+   */
+  async checkPermissions(): Promise<Readonly<AppPermissionStatus>> {
     if (!Capacitor.isNativePlatform()) {
-      return createFailureResult('NOT_SUPPORTED', 'Native notifications require Android/iOS.');
+      return { notificationsGranted: false, exactAlarmGranted: false, errorCode: 'NOT_SUPPORTED' };
     }
 
     try {
       const localStatus = await LocalNotifications.checkPermissions();
-      if (localStatus.display === 'granted') {
-        return createSuccessResult();
-      }
-      return createFailureResult('PERMISSION_DENIED', 'Local notification permission is denied.');
+      // BR-001: Leverage custom bridge for API 31+ exact alarm rights
+      const exactAlarmResult = await SynkBridge.checkExactAlarmPermission();
+      
+      const notificationsGranted = localStatus.display === 'granted';
+      const exactAlarmGranted = exactAlarmResult.success && exactAlarmResult.data ? exactAlarmResult.data.granted : false;
+
+      return {
+        notificationsGranted,
+        exactAlarmGranted,
+        errorCode: (notificationsGranted && exactAlarmGranted) ? null : 'PERMISSION_DENIED'
+      };
     } catch (error) {
-       return createFailureResult('REQUEST_FAILED', 'Failed to check permissions.');
+       return { notificationsGranted: false, exactAlarmGranted: false, errorCode: 'REQUEST_FAILED' };
     }
   },
 
-  async requestPermission(): Promise<NotificationPermissionResult> {
+  /**
+   * Actively interrupts the user to request missing OS permissions.
+   * Decouples Push (FCM) from Local to prevent total system failure if Google Play Services are missing.
+   */
+  async requestPermissions(): Promise<Readonly<AppPermissionStatus>> {
     if (!Capacitor.isNativePlatform()) {
-       return createFailureResult('NOT_SUPPORTED', 'Native notifications require Android/iOS.');
+       return { notificationsGranted: false, exactAlarmGranted: false, errorCode: 'NOT_SUPPORTED' };
     }
 
     try {
-      // 1. Request Push Notification permissions (FCM)
+      // 1. Opportunistically request Push (FCM). If it fails, we ignore it to maintain graceful degradation.
       let pushStatus = await PushNotifications.checkPermissions();
       if (pushStatus.receive !== 'granted') {
-        pushStatus = await PushNotifications.requestPermissions();
+        try { await PushNotifications.requestPermissions(); } catch(e) { /* Ignore push failure */ }
       }
 
-      // 2. Request Local Notification permissions (For background alarms)
+      // 2. Request Local Notification permissions (Mission Critical)
       let localStatus = await LocalNotifications.checkPermissions();
       if (localStatus.display !== 'granted') {
         localStatus = await LocalNotifications.requestPermissions();
       }
 
-      if (pushStatus.receive === 'granted' && localStatus.display === 'granted') {
-        return createSuccessResult();
+      // 3. Request Exact Alarm permissions (Mission Critical for API 31+)
+      const exactAlarmResult = await SynkBridge.requestExactAlarmPermission();
+      const exactAlarmGranted = exactAlarmResult.success && exactAlarmResult.data ? exactAlarmResult.data.granted : false;
+
+      // Handle the "Permanently Denied" UX trap
+      if (localStatus.display === 'denied') {
+        return { notificationsGranted: false, exactAlarmGranted, errorCode: 'PERMANENTLY_DENIED' };
       }
 
-      return createFailureResult('PERMISSION_DENIED', 'User denied native OS permissions.');
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Native OS request failed.';
-      return createFailureResult('REQUEST_FAILED', message);
+      const notificationsGranted = localStatus.display === 'granted';
+
+      return {
+        notificationsGranted,
+        exactAlarmGranted,
+        errorCode: (notificationsGranted && exactAlarmGranted) ? null : 'PERMISSION_DENIED'
+      };
+    } catch (error) {
+      return { notificationsGranted: false, exactAlarmGranted: false, errorCode: 'REQUEST_FAILED' };
     }
   },
 };
-
