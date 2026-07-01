@@ -1,23 +1,32 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { AuthState, TOTPPayload, UserRole } from '../types/auth.types';
-import type { EpochMs } from '../types/common.types';
+import type { AuthState, TOTPPayload } from '../types/auth.types';
 import { AuthService } from '../services/AuthService';
 import { OfflineLeaseService } from '../services/OfflineLeaseService';
 import { SynkBridge } from '../bridge/SynkBridge';
 import { storageUtils, AUTH_STORAGE_KEY } from '../utils/storageUtils';
+import { parseEpochMs } from '../utils/common.validators';
 
+/**
+ * Global state container for authentication and offline lease data.
+ */
 export interface AuthStoreState extends AuthState {
+  /** Indicates if an authentication request is currently in flight. */
   readonly isLoading: boolean;
+  /** Human-readable error message for UI consumption. */
   readonly error: string | null;
 
+  /** Initiates the TOTP verification flow and hydrates state on success. */
   readonly loginAsCoordinator: (payload: TOTPPayload) => Promise<void>;
+  /** Clears the current session and resets state. */
   readonly logout: () => void;
+  /** Pulls saved state from disk and evaluates lease validity before applying. */
   readonly hydrateFromStorage: () => Promise<void>;
+  /** Fetches the latest hardware uptime from the OS to update the lease anchor. */
   readonly refreshLeaseAnchor: () => Promise<void>;
 }
 
-const INITIAL_STATE: AuthState = {
+const INITIAL_STATE: Readonly<AuthState> = {
   role: 'STUDENT',
   isAuthenticated: false,
   leaseExpiresAt: null,
@@ -31,7 +40,7 @@ export const useAuthStore = create<AuthStoreState>()(
       isLoading: false,
       error: null,
 
-      loginAsCoordinator: async (payload: TOTPPayload) => {
+      loginAsCoordinator: async (payload: Readonly<TOTPPayload>) => {
         set({ isLoading: true, error: null });
         try {
           const result = await AuthService.verifyTOTP(payload);
@@ -48,36 +57,26 @@ export const useAuthStore = create<AuthStoreState>()(
             set({ error: result.error || 'Authentication failed', isLoading: false });
           }
         } catch (err) {
-          set({ 
-            error: err instanceof Error ? err.message : 'Unknown authentication error', 
-            isLoading: false 
-          });
+          set({ error: err instanceof Error ? err.message : 'Unknown auth error', isLoading: false });
         }
       },
 
-      logout: () => {
-        set({ ...INITIAL_STATE, error: null });
-      },
+      logout: () => set({ ...INITIAL_STATE, error: null }),
 
       hydrateFromStorage: async () => {
         try {
           const storedAuth = await storageUtils.readAuthState();
-          
-          if (!storedAuth) {
-            set({ ...INITIAL_STATE });
-            return;
-          }
+          if (!storedAuth) return set({ ...INITIAL_STATE });
 
-          const isValid = await OfflineLeaseService.validateLease(storedAuth);
+          const check = await OfflineLeaseService.validateLease(storedAuth);
           
-          if (isValid) {
+          if (check.isValid) {
             set({ ...storedAuth, isAuthenticated: storedAuth.role === 'COORDINATOR' });
           } else {
-            set({ ...INITIAL_STATE });
+            set({ ...INITIAL_STATE, error: `Session invalid: ${check.reason}` });
           }
         } catch (err) {
-          // Rule: Never throw. Fallback to safest state.
-          set({ ...INITIAL_STATE, error: 'Failed to hydrate from storage' });
+          set({ ...INITIAL_STATE, error: 'Failed to hydrate' });
         }
       },
 
@@ -85,25 +84,25 @@ export const useAuthStore = create<AuthStoreState>()(
         try {
           const result = await SynkBridge.getElapsedRealtime();
           if (result.success && result.data) {
-            set({ leaseAnchorElapsed: result.data.elapsedMs });
-            // Used for countdown display only.
-            // Authorization decisions are handled by OfflineLeaseService.
+            // Apply ACL validation to primitive native response
+            set({ leaseAnchorElapsed: parseEpochMs(result.data.elapsedMs) });
           } else {
             set({ error: result.error || 'Failed to fetch elapsed time' });
           }
         } catch (err) {
-          set({ error: err instanceof Error ? err.message : 'Failed to refresh anchor' });
+          set({ error: err instanceof Error ? err.message : 'Anchor refresh failed' });
         }
       },
     }),
     {
       name: AUTH_STORAGE_KEY,
-      // Rule: Persist role, leaseExpiresAt only.
+      // Persist only stable authentication data. leaseAnchorElapsed is critical 
+      // here to ensure the offline check survives an application cold start.
       partialize: (state) => ({
         role: state.role,
         leaseExpiresAt: state.leaseExpiresAt,
+        leaseAnchorElapsed: state.leaseAnchorElapsed,
       }),
-      // Bypassing default auto-hydration to strictly follow the hydrateFromStorage flow
       skipHydration: true, 
     }
   )
