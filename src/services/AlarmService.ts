@@ -1,23 +1,19 @@
 import { SynkBridge } from '../bridge/SynkBridge';
-import type { 
-  AlarmTime, 
-  AlarmConfig,
-} from '../types/alarm.types';
-import type { 
-  CloudAlarmRecord 
-} from '../types/sync.types';
-import type {
-  SetAlarmResult,
-} from '../types/bridge.types';
+import { formatAlarmTime, parseTimeString, parseISODateString, parseEpochMs } from '../utils/common.validators';
+import type { AlarmTime, AlarmConfig } from '../types/alarm.types';
+import type { CloudAlarmRecord } from '../types/sync.types';
+import type { SetAlarmResult } from '../types/bridge.types';
+import type { ISODateString } from '../types/common.types';
 
-import type { 
-  TimeString, 
-  ISODateString, 
-  EpochMs 
-} from '../types/common.types';
+/**
+ * The system's baseline alarm schedule, used when no override is active.
+ * Maintained as a strict internal domain object (integers).
+ */
+export const DEFAULT_ALARM_TIME: Readonly<AlarmTime> = { hours: 5, minutes: 30 };
 
-export const DEFAULT_ALARM_TIME: Readonly<AlarmTime> = { hourTime24Strings: 5, minutes: 30 };
-
+/**
+ * The initial state configuration for the alarm system.
+ */
 export const DEFAULT_ALARM_CONFIG: Readonly<AlarmConfig> = {
   defaultTime: DEFAULT_ALARM_TIME,
   overrideTime: null,
@@ -27,39 +23,15 @@ export const DEFAULT_ALARM_CONFIG: Readonly<AlarmConfig> = {
 };
 
 /**
- * Validates and formats an AlarmTime object into a zero-padded "HH:MM" string.
- */
-export const formatAlarmTimeString = (time: Readonly<AlarmTime>): TimeString => {
-  if (time.hours < 0 || time.hours > 23 || time.minutes < 0 || time.minutes > 59) {
-    throw new TypeError(`Invalid alarm time bounds: ${time.hours}:${time.minutes}`);
-  }
-  const h = time.hours.toString().padStart(2, '0');
-  const m = time.minutes.toString().padStart(2, '0');
-  return `${h}:${m}` as TimeString;
-};
-
-/**
- * Parses a "HH:MM" string into a strictly typed AlarmTime object.
- */
-export const parseAlarmTimeString = (raw: TimeString): Readonly<AlarmTime> => {
-  if (!/^\d{2}:\d{2}$/.test(raw)) {
-    throw new TypeError(`Invalid TimeString format: ${raw}`);
-  }
-  
-  const [hStr, mStr] = raw.split(':');
-  const hours = parseInt(hStr, 10);
-  const minutes = parseInt(mStr, 10);
-
-  if (hours > 23 || minutes > 59) {
-    throw new TypeError(`Time bounds exceeded in string: ${raw}`);
-  }
-
-  return { hours, minutes };
-};
-
-/**
- * DTO-002: Maps a Cloud DTO (wire format) to the Domain Model.
- * SV-003: Validates external data before applying it to the domain.
+ * Translates a raw cloud DTO into a safe, internal Domain Model.
+ * * Architectural Rules Enforced:
+ * - DTO-002: Separates external wire format from internal domain models.
+ * - SV-003: Acts as an Anti-Corruption Layer (ACL) boundary. All external 
+ * primitives are passed through strict validators before being trusted.
+ * * @param record - The raw data payload fetched from Firebase.
+ * @param current - The current local configuration, used to preserve state the cloud doesn't own (like isEnabled).
+ * @returns A strictly validated, immutable AlarmConfig object ready for application state.
+ * @throws {TypeError} If any of the cloud data fails strict type boundary validation.
  */
 export const mapCloudRecordToConfig = (
   record: Readonly<CloudAlarmRecord>,
@@ -68,32 +40,40 @@ export const mapCloudRecordToConfig = (
   
   let overrideTime: Readonly<AlarmTime> | null = null;
   
-  // Validation boundary
   if (record.override_time !== null) {
-    overrideTime = parseAlarmTimeString(record.override_time);
+    // SV-003: Pass through the ACL validator first to guarantee shape
+    const safeTimeStr = parseTimeString(record.override_time);
+    const [hStr, mStr] = safeTimeStr.split(':');
+    overrideTime = { hours: parseInt(hStr, 10), minutes: parseInt(mStr, 10) };
   }
 
-  if (record.active_date !== null && !/^\d{4}-\d{2}-\d{2}$/.test(record.active_date)) {
-    throw new TypeError(`Invalid ISODateString format in CloudRecord: ${record.active_date}`);
+  let activeDate: ISODateString | null = null;
+  if (record.active_date !== null) {
+    // SV-003: Enforce calendar validity
+    activeDate = parseISODateString(record.active_date); 
   }
 
   return {
-    defaultTime: current.defaultTime, // Maintained from domain
+    defaultTime: current.defaultTime, // Maintained from local domain
     overrideTime: overrideTime,
-    activeDate: record.active_date as ISODateString | null,
-    isEnabled: current.isEnabled, // Cloud does not own this field
-    lastSyncedAt: record.last_updated as EpochMs
+    activeDate: activeDate,
+    isEnabled: current.isEnabled, // Cloud does not dictate user toggle state
+    lastSyncedAt: parseEpochMs(record.last_updated) // SV-003: Brand the primitive
   };
 };
 
 /**
- * Pushes an override schedule to the native Android AlarmManager.
+ * Pushes a temporary override schedule to the native Android AlarmManager.
+ * * @param time - The internal domain object representing the target time.
+ * @param date - The specific calendar date this override applies to.
+ * @returns A BridgeResult indicating the success or failure of the native OS transaction.
  */
 export const pushOverride = async (
   time: Readonly<AlarmTime>,
   date: ISODateString
 ): Promise<Readonly<SetAlarmResult>> => {
-  const timeString = formatAlarmTimeString(time);
+  // Boundary Translation: Safely serialize domain model to the strict bridge DTO
+  const timeString = formatAlarmTime(time); 
   
   return await SynkBridge.setAlarm({
     time: timeString,
@@ -103,10 +83,12 @@ export const pushOverride = async (
 };
 
 /**
- * Schedules the default baseline alarm with the native Android AlarmManager.
+ * Schedules the baseline default alarm with the native Android OS.
+ * Used when an override expires or is manually cleared.
+ * * @returns A BridgeResult indicating native OS success or failure.
  */
 export const scheduleDefaultAlarm = async (): Promise<Readonly<SetAlarmResult>> => {
-  const timeString = formatAlarmTimeString(DEFAULT_ALARM_TIME);
+  const timeString = formatAlarmTime(DEFAULT_ALARM_TIME);
   
   return await SynkBridge.setAlarm({
     time: timeString,
