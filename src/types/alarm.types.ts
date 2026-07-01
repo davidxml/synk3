@@ -1,65 +1,39 @@
-import type {
-  TimeString,
-  ISODateString,
-  EpochMs,
-} from './common.types'
+import type { TimeString, ISODateString, EpochMs } from './common.types';
 
 /**
- * Represents a 24-hour clock time.
+ * Internal domain representation of a 24-hour time.
+ * Strictly uses integers to allow for safe mathematical operations.
  */
 export interface AlarmTime {
-  /**
-   * Hour of day in 24-hour format.
-   * Valid range: 0-23.
-   */
-  readonly hours: TimeString;
-
-  /**
-   * Minute of hour.
-   * Valid range: 0-59.
-   */
+  /** Hour of day in 24-hour format (0-23). */
+  readonly hours: number;
+  /** Minute of hour (0-59). */
   readonly minutes: number;
 }
 
 /**
- * Alarm configuration persisted by the application.
+ * The core configuration for local alarm behavior.
+ * Represents the finalized state mapped from remote cloud records.
  */
 export interface AlarmConfig {
-  /**
-   * Default alarm time used when no override is active.
-   */
-  readonly defaultTime: TimeString;
-
-  /**
-   * Temporary alarm time override.
-   * Null when no override exists.
-   */
-  readonly overrideTime: TimeString | null;
-
-  /**
-   * Active date for the override alarm. 
-   * Enforced format: YYYY-MM-DD. Null when not date-specific.
-   */
+  /** The baseline alarm time applied when no override exists. */
+  readonly defaultTime: Readonly<AlarmTime>;
+  /** Temporary date-specific alarm time that overrides the default. */
+  readonly overrideTime: Readonly<AlarmTime> | null;
+  /** The specific calendar date the override applies to. */
   readonly activeDate: ISODateString | null;
-
-  /**
-   * Indicates whether the alarm is enabled.
-   */
+  /** Whether the alarm system is currently toggled on. */
   readonly isEnabled: boolean;
-
-  /**
-   * Last successful synchronization timestamp in epoch milliseconds.
-   * Null when never synchronized.
-   */
+  /** The last successful sync timestamp, used for conflict resolution. */
   readonly lastSyncedAt: EpochMs | null;
 }
 
 /**
- * Current alarm lifecycle status.
+ * The lifecycle state of a scheduled alarm.
  */
-export type AlarmStatus =
-  | "SCHEDULED"
-  | "FIRING"
-  | "DISMISSED"
-  | "DISABLED"
-  | "ERROR";
+export type AlarmStatus = 
+|"SCHEDULED" 
+| "FIRING" 
+| "DISMISSED" 
+| "DISABLED" 
+| "ERROR";
