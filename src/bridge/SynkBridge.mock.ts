@@ -2,6 +2,7 @@ import type {
   BridgeResult,
   CancelAlarmResult,
   GetAlarmStatusResult,
+  GetElapsedRealtimeResult,
   SetAlarmPayload,
   SetAlarmResult,
   ValidateLeasePayload,
@@ -10,8 +11,11 @@ import type {
 
 import type { AlarmStatus } from '../types/alarm.types';
 import type { SynkEnginePlugin } from './SynkBridge';
+import type { EpochMs } from '../types/common.types';
 
 const DELAY_MS = 200;
+
+const toEpochMs = (value: number): EpochMs => value as EpochMs;
 
 const delay = (): Promise<void> =>
   new Promise((resolve) => {
@@ -34,9 +38,9 @@ export const SynkBridgeMock: SynkEnginePlugin = {
   async setAlarm(
     _payload: SetAlarmPayload
   ): Promise<SetAlarmResult> {
-    return success<{ readonly scheduledEpoch: number }>({
+    return success<{ readonly scheduledEpoch: EpochMs }>({
       scheduledEpoch:
-        Date.now() + 24 * 60 * 60 * 1000,
+        toEpochMs(Date.now() + 24 * 60 * 60 * 1000),
     });
   },
 
@@ -49,20 +53,20 @@ export const SynkBridgeMock: SynkEnginePlugin = {
 
     return success<{
       readonly status: AlarmStatus;
-      readonly scheduledEpoch: number | null;
+      readonly scheduledEpoch: EpochMs | null;
     }>({
       status,
       scheduledEpoch:
-        Date.now() + 24 * 60 * 60 * 1000,
+        toEpochMs(Date.now() + 24 * 60 * 60 * 1000),
     });
   },
 
   async validateLease(
     _payload: ValidateLeasePayload
   ): Promise<ValidateLeaseResult> {
-    return success<{ readonly remainingMs: number }>({
+    return success<{ readonly remainingMs: EpochMs }>({
       remainingMs:
-        7 * 24 * 60 * 60 * 1000,
+        toEpochMs(7 * 24 * 60 * 60 * 1000), // 7 days in milliseconds
     });
   },
 
@@ -71,4 +75,11 @@ export const SynkBridgeMock: SynkEnginePlugin = {
   > {
     return success<null>(null);
   },
+
+  async getElapsedRealtime():
+  Promise<GetElapsedRealtimeResult> {
+    return success<{ readonly elapsedMs: EpochMs }>({
+      elapsedMs: Date.now() as EpochMs,
+    });
+  }
 };
