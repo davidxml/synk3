@@ -63,3 +63,11 @@ export interface SyncState {
   readonly error: string | null;
 }
 
+/**
+ * Result wrapper for fetching cloud data to prevent 'Null Swallowing' of distinct error states.
+ */
+export interface CloudFetchResult {
+  readonly success: boolean;
+  readonly data: Readonly<CloudAlarmRecord> | null;
+  readonly error: string | null;
+}
