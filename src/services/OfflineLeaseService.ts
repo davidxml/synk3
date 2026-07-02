@@ -1,6 +1,5 @@
 import { SynkBridge } from '../bridge/SynkBridge';
 import type { AuthState } from '../types/auth.types';
-import type { EpochMs } from '../types/common.types';
 
 /**
  * Result of the offline lease validation check.
