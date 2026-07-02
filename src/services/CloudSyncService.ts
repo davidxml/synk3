@@ -1,8 +1,7 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore, doc, getDoc, setDoc, enableIndexedDbPersistence, type Firestore } from 'firebase/firestore';
 import { parseTimeString, parseISODateString, parseEpochMs } from '../utils/common.validators';
-import type { CloudAlarmRecord, SyncStatus } from '../types/sync.types';
-import type { EpochMs } from '../types/common.types';
+import type { CloudAlarmRecord, CloudFetchResult, SyncStatus } from '../types/sync.types';
 
 class ConfigurationError extends Error {
   constructor(message: string) {
@@ -48,11 +47,7 @@ const getDb = async (): Promise<Firestore> => {
 /**
  * Result wrapper for fetching cloud data to prevent 'Null Swallowing' of distinct error states.
  */
-export interface CloudFetchResult {
-  readonly success: boolean;
-  readonly data: Readonly<CloudAlarmRecord> | null;
-  readonly error: string | null;
-}
+
 
 /**
  * Fetches the latest schedule from the cloud.
