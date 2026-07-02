@@ -50,20 +50,3 @@ export interface TOTPPayload {
 /**
  * Result of lease validation.
  */
-export interface LeaseValidationResult {
-  /**
-   * Indicates whether the lease is valid.
-   */
-  readonly isValid: boolean;
-
-  /**
-   * Human-readable validation reason.
-   */
-  readonly reason: string;
-
-  /**
-   * Remaining lease duration in milliseconds.
-   * Null when unavailable.
-   */
-  readonly remainingMs: number | null;
-}
