@@ -58,14 +58,14 @@ export interface ValidateLeasePayload {
   /**
    * Elapsed-time anchor in milliseconds used for offline checks.
    */
-  readonly elapsedAnchor: number;
+  readonly elapsedAnchor: EpochMs;
 }
 
 /**
  * Result returned from lease validation.
  */
 export type ValidateLeaseResult = BridgeResult<{
-  readonly remainingMs: number;
+  readonly remainingMs: EpochMs;
 }>;
 
 /**
@@ -90,5 +90,5 @@ export type ScheduleBackgroundSyncResult = BridgeResult<null>;
  * Result returned when querying the hardware-anchored elapsed realtime.
  */
 export type GetElapsedRealtimeResult = BridgeResult<{
-  readonly elapsedMs: number;
+  readonly elapsedMs: EpochMs;
 }>;
