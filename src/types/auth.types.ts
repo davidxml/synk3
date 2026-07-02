@@ -30,7 +30,7 @@ export interface AuthState {
    * offline lease validation.
    * Null when unavailable.
    */
-  readonly leaseAnchorElapsed: number | null;
+  readonly leaseAnchorElapsed: EpochMs | null;
 }
 
 /**
