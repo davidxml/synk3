@@ -23,7 +23,7 @@ export interface CloudAlarmRecord {
   /**
    * Last update timestamp in epoch milliseconds.
    */
-  readonly last_updated: number;
+  readonly last_updated: EpochMs;
 }
 
 /**
@@ -62,3 +62,4 @@ export interface SyncState {
    */
   readonly error: string | null;
 }
+
