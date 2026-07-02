@@ -1,14 +1,6 @@
 import { SynkBridge } from '../bridge/SynkBridge';
 import type { AuthState } from '../types/auth.types';
-import type { EpochMs } from '../types/common.types';
-
-/**
- * Result of the offline lease validation check.
- */
-export interface LeaseCheckResult {
-  readonly isValid: boolean;
-  readonly reason: 'VALID' | 'NO_LEASE' | 'LEASE_EXPIRED' | 'CLOCK_TAMPER_SUSPECTED' | 'NATIVE_BRIDGE_FAILED';
-}
+import type { LeaseCheckResult } from '../types/auth.types';
 
 /**
  * Validates the current offline lease against the un-tamperable hardware clock.

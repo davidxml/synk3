@@ -1,3 +1,5 @@
+import type { EpochMs } from "./common.types";
+
 /**
  * Supported authenticated user roles.
  */
@@ -21,14 +23,14 @@ export interface AuthState {
    * Lease expiration timestamp in epoch milliseconds.
    * Null when no active lease exists.
    */
-  readonly leaseExpiresAt: number | null;
+  readonly leaseExpiresAt: EpochMs | null;
 
   /**
    * Monotonic elapsed-time anchor in milliseconds used for
    * offline lease validation.
    * Null when unavailable.
    */
-  readonly leaseAnchorElapsed: number | null;
+  readonly leaseAnchorElapsed: EpochMs | null;
 }
 
 /**
@@ -44,26 +46,13 @@ export interface TOTPPayload {
    * Timestamp associated with the PIN generation or validation
    * in epoch milliseconds.
    */
-  readonly timestamp: number;
+  readonly timestamp: EpochMs;
 }
 
 /**
- * Result of lease validation.
+ * Result of the offline lease validation check.
  */
-export interface LeaseValidationResult {
-  /**
-   * Indicates whether the lease is valid.
-   */
+export interface LeaseCheckResult {
   readonly isValid: boolean;
-
-  /**
-   * Human-readable validation reason.
-   */
-  readonly reason: string;
-
-  /**
-   * Remaining lease duration in milliseconds.
-   * Null when unavailable.
-   */
-  readonly remainingMs: number | null;
+  readonly reason: 'VALID' | 'NO_LEASE' | 'LEASE_EXPIRED' | 'CLOCK_TAMPER_SUSPECTED' | 'NATIVE_BRIDGE_FAILED';
 }

@@ -23,7 +23,7 @@ export interface CloudAlarmRecord {
   /**
    * Last update timestamp in epoch milliseconds.
    */
-  readonly last_updated: number;
+  readonly last_updated: EpochMs;
 }
 
 /**
@@ -60,5 +60,14 @@ export interface SyncState {
    * Human-readable synchronization error message.
    * Null when no error exists.
    */
+  readonly error: string | null;
+}
+
+/**
+ * Result wrapper for fetching cloud data to prevent 'Null Swallowing' of distinct error states.
+ */
+export interface CloudFetchResult {
+  readonly success: boolean;
+  readonly data: Readonly<CloudAlarmRecord> | null;
   readonly error: string | null;
 }
