@@ -50,5 +50,9 @@ export interface TOTPPayload {
 }
 
 /**
- * Result of lease validation.
+ * Result of the offline lease validation check.
  */
+export interface LeaseCheckResult {
+  readonly isValid: boolean;
+  readonly reason: 'VALID' | 'NO_LEASE' | 'LEASE_EXPIRED' | 'CLOCK_TAMPER_SUSPECTED' | 'NATIVE_BRIDGE_FAILED';
+}
