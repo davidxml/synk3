@@ -1,3 +1,5 @@
+import type { EpochMs } from "./common.types";
+
 /**
  * Supported authenticated user roles.
  */
@@ -21,7 +23,7 @@ export interface AuthState {
    * Lease expiration timestamp in epoch milliseconds.
    * Null when no active lease exists.
    */
-  readonly leaseExpiresAt: number | null;
+  readonly leaseExpiresAt: EpochMs | null;
 
   /**
    * Monotonic elapsed-time anchor in milliseconds used for
@@ -44,7 +46,7 @@ export interface TOTPPayload {
    * Timestamp associated with the PIN generation or validation
    * in epoch milliseconds.
    */
-  readonly timestamp: number;
+  readonly timestamp: EpochMs;
 }
 
 /**
